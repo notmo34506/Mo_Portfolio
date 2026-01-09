@@ -1,0 +1,1096 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mo — Roblox Scripter / VFX Artist</title>
+  <meta name="description" content="Mo — Roblox Scripter & VFX Artist. Advanced systems, interactive UI, and stylized effects." />
+  <style>
+    :root{
+      --bg0:#050815;
+      --bg1:#070b1c;
+      --card:#0a1030cc;
+      --stroke:#1a2b6a;
+      --txt:#eaf0ff;
+      --mut:#a9b6e6;
+      --a:#63b3ff;
+      --b:#2a7bff;
+      --c:#8a7bff;
+      --ok:#6ef1c2;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --glow: 0 0 24px rgba(99,179,255,.45), 0 0 80px rgba(42,123,255,.22);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--txt);
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(99,179,255,.18), transparent 55%),
+                  radial-gradient(900px 600px at 80% 30%, rgba(138,123,255,.14), transparent 58%),
+                  radial-gradient(1100px 700px at 50% 90%, rgba(42,123,255,.12), transparent 60%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1) 55%, #030615);
+      overflow-x:hidden;
+    }
+
+    a{color:inherit; text-decoration:none}
+
+    .noise{
+      pointer-events:none;
+      position:fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+      opacity:.16;
+      transform:translateZ(0);
+    }
+
+    .bgFX{
+      position:fixed; inset:-40px;
+      pointer-events:none;
+      filter: blur(0px);
+      transform:translateZ(0);
+    }
+    .orb{
+      position:absolute;
+      width:520px; height:520px;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(99,179,255,.55), rgba(42,123,255,.18) 45%, rgba(0,0,0,0) 70%);
+      box-shadow: 0 0 70px rgba(99,179,255,.2);
+      opacity:.75;
+      animation: float 12s ease-in-out infinite;
+    }
+    .orb.o2{
+      width:680px; height:680px;
+      left:auto; right:-140px; top:90px;
+      background: radial-gradient(circle at 50% 40%, rgba(138,123,255,.36), rgba(99,179,255,.14) 52%, rgba(0,0,0,0) 72%);
+      animation-duration: 15s;
+      opacity:.6;
+    }
+    .orb.o3{
+      width:560px; height:560px;
+      top:auto; bottom:-220px; left:10%;
+      background: radial-gradient(circle at 40% 35%, rgba(42,123,255,.32), rgba(99,179,255,.12) 55%, rgba(0,0,0,0) 75%);
+      animation-duration: 18s;
+      opacity:.55;
+    }
+    @keyframes float{
+      0%,100%{transform: translate3d(0,0,0) scale(1)}
+      50%{transform: translate3d(0,-28px,0) scale(1.03)}
+    }
+
+    .gridFX{
+      position:fixed; inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(to right, rgba(99,179,255,.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(99,179,255,.06) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(circle at 30% 10%, rgba(0,0,0,1), rgba(0,0,0,0) 65%);
+      opacity:.6;
+      transform: translateZ(0);
+      animation: gridShift 10s linear infinite;
+    }
+    @keyframes gridShift{
+      from{background-position:0 0, 0 0}
+      to{background-position:64px 0, 0 64px}
+    }
+
+    header{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(7,11,28,.86), rgba(7,11,28,.55));
+      border-bottom: 1px solid rgba(26,43,106,.55);
+    }
+    .nav{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      letter-spacing:.3px;
+      user-select:none;
+    }
+    .logo{
+      width:34px; height:34px;
+      border-radius:12px;
+      background: radial-gradient(circle at 30% 30%, rgba(99,179,255,.9), rgba(42,123,255,.25) 55%, rgba(0,0,0,0) 75%),
+                  linear-gradient(135deg, rgba(99,179,255,.28), rgba(138,123,255,.12));
+      border: 1px solid rgba(99,179,255,.35);
+      box-shadow: var(--glow);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo::after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: conic-gradient(from 90deg, rgba(99,179,255,0), rgba(99,179,255,.9), rgba(138,123,255,.6), rgba(99,179,255,0));
+      animation: spin 3.5s linear infinite;
+      opacity:.35;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .brand h1{font-size:14px; margin:0; font-weight:700}
+    .brand span{display:block; font-size:12px; color:var(--mut); margin-top:1px; font-weight:500}
+
+    .links{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+    .chip{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(26,43,106,.7);
+      background: rgba(10,16,48,.55);
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+      color: var(--mut);
+      font-size:12px;
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .chip::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: linear-gradient(90deg, rgba(99,179,255,0), rgba(99,179,255,.35), rgba(138,123,255,.25), rgba(99,179,255,0));
+      transform:translateX(-60%);
+      transition: transform .55s ease;
+      opacity:.45;
+      filter: blur(2px);
+    }
+    .chip:hover{transform: translateY(-1px); box-shadow: var(--glow); border-color: rgba(99,179,255,.55); background: rgba(10,16,48,.75)}
+    .chip:hover::before{transform:translateX(60%)}
+
+    .cta{
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(99,179,255,.45);
+      background: linear-gradient(135deg, rgba(42,123,255,.25), rgba(99,179,255,.12));
+      box-shadow: 0 0 24px rgba(99,179,255,.18);
+      color: var(--txt);
+      font-size:12px;
+      font-weight:700;
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .cta::after{
+      content:"";
+      position:absolute; inset:-30%;
+      background: conic-gradient(from 120deg, rgba(99,179,255,0), rgba(99,179,255,.55), rgba(138,123,255,.45), rgba(99,179,255,0));
+      opacity:.35;
+      animation: spin 4.2s linear infinite;
+      filter: blur(6px);
+    }
+    .cta:hover{transform: translateY(-1px) scale(1.02); box-shadow: 0 0 28px rgba(99,179,255,.28), 0 0 90px rgba(42,123,255,.18); border-color: rgba(99,179,255,.65)}
+
+    main{max-width:1120px; margin:0 auto; padding: 22px 20px 90px}
+
+    .hero{
+      padding: 56px 0 30px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 28px;
+      align-items:center;
+    }
+
+    .headline{
+      position:relative;
+      border-radius: 24px;
+      padding: 26px 24px;
+      background: linear-gradient(180deg, rgba(10,16,48,.72), rgba(10,16,48,.42));
+      border: 1px solid rgba(26,43,106,.65);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .headline::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(600px 220px at 20% 10%, rgba(99,179,255,.35), transparent 60%),
+                  radial-gradient(600px 240px at 70% 30%, rgba(138,123,255,.22), transparent 65%),
+                  linear-gradient(90deg, rgba(99,179,255,.1), rgba(42,123,255,0));
+      opacity:.9;
+      z-index:0;
+      filter: blur(0px);
+      animation: shimmer 8s ease-in-out infinite;
+    }
+    @keyframes shimmer{
+      0%,100%{transform:translate3d(0,0,0)}
+      50%{transform:translate3d(10px,-8px,0)}
+    }
+
+    .headline > *{position:relative; z-index:1}
+
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(99,179,255,.35);
+      background: rgba(5,8,21,.55);
+      color: var(--mut);
+      font-size: 12px;
+      width: fit-content;
+    }
+    .pulse{
+      width:10px; height:10px;
+      border-radius:999px;
+      background: rgba(110,241,194,.95);
+      box-shadow: 0 0 0 rgba(110,241,194,.0);
+      animation: pulse 1.5s ease-out infinite;
+    }
+    @keyframes pulse{
+      0%{box-shadow: 0 0 0 0 rgba(110,241,194,.35)}
+      70%{box-shadow: 0 0 0 14px rgba(110,241,194,0)}
+      100%{box-shadow: 0 0 0 0 rgba(110,241,194,0)}
+    }
+
+    .headline h2{
+      margin: 14px 0 10px;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.06;
+      letter-spacing: -0.6px;
+    }
+    .grad{
+      background: linear-gradient(90deg, var(--txt), rgba(99,179,255,.9), rgba(138,123,255,.9));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .headline p{
+      margin: 0 0 18px;
+      color: var(--mut);
+      font-size: 14.5px;
+      line-height: 1.6;
+      max-width: 62ch;
+    }
+
+    .actions{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing:.2px;
+      color: var(--txt);
+      background: linear-gradient(135deg, rgba(42,123,255,.40), rgba(99,179,255,.14));
+      border: 1px solid rgba(99,179,255,.45);
+      box-shadow: 0 0 24px rgba(99,179,255,.18);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .btn::before{
+      content:"";
+      position:absolute; inset:-60% -30%;
+      background: conic-gradient(from 90deg, rgba(99,179,255,0), rgba(99,179,255,.55), rgba(138,123,255,.4), rgba(99,179,255,0));
+      opacity:.35;
+      animation: spin 5.4s linear infinite;
+      filter: blur(10px);
+    }
+    .btn:hover{transform: translateY(-2px); box-shadow: 0 0 28px rgba(99,179,255,.28), 0 0 100px rgba(42,123,255,.16); border-color: rgba(99,179,255,.65)}
+
+    .btn.secondary{
+      background: rgba(10,16,48,.55);
+      border: 1px solid rgba(26,43,106,.75);
+      box-shadow:none;
+      color: var(--mut);
+    }
+    .btn.secondary::before{opacity:.2}
+
+    .statCard{
+      border-radius: 24px;
+      padding: 22px;
+      background: linear-gradient(180deg, rgba(10,16,48,.72), rgba(10,16,48,.40));
+      border: 1px solid rgba(26,43,106,.65);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .scan{
+      position:absolute; inset:-30% -30%;
+      background: linear-gradient(90deg, transparent, rgba(99,179,255,.18), transparent);
+      transform: translateX(-60%) rotate(12deg);
+      filter: blur(2px);
+      opacity:.8;
+      animation: scan 2.8s ease-in-out infinite;
+    }
+    @keyframes scan{
+      0%{transform: translateX(-60%) rotate(12deg)}
+      60%{transform: translateX(60%) rotate(12deg)}
+      100%{transform: translateX(60%) rotate(12deg)}
+    }
+
+    .stats{display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; position:relative}
+    .mini{
+      border-radius: 18px;
+      padding: 14px;
+      background: rgba(5,8,21,.42);
+      border: 1px solid rgba(26,43,106,.6);
+      position:relative;
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+    .mini::after{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(420px 130px at 20% 20%, rgba(99,179,255,.22), transparent 65%),
+                  radial-gradient(360px 120px at 80% 40%, rgba(138,123,255,.16), transparent 70%);
+      opacity:.85;
+      pointer-events:none;
+      transform: translate3d(0,0,0);
+      animation: shimmer 7s ease-in-out infinite;
+    }
+    .mini > *{position:relative; z-index:1}
+
+    .mini .n{font-size:22px; font-weight:900; letter-spacing:-.6px}
+    .mini .t{margin-top:4px; font-size:12px; color:var(--mut)}
+
+    section{margin-top: 28px}
+    .sectionHeader{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 12px;
+      margin: 34px 0 14px;
+    }
+    .sectionHeader h3{margin:0; font-size:18px; letter-spacing:-.2px}
+    .sectionHeader p{margin:0; color:var(--mut); font-size:13px; line-height:1.45; max-width:62ch}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 14px;
+    }
+
+    .card{
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(10,16,48,.72), rgba(10,16,48,.40));
+      border: 1px solid rgba(26,43,106,.65);
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+      overflow:hidden;
+      position:relative;
+      transform: translateZ(0);
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+    }
+    .card:hover{transform: translateY(-3px); box-shadow: var(--glow); border-color: rgba(99,179,255,.6)}
+
+    .cardTop{
+      padding: 16px 16px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .tag{
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .35px;
+      text-transform: uppercase;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(5,8,21,.55);
+      border: 1px solid rgba(26,43,106,.65);
+      color: rgba(169,182,230,.95);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      user-select:none;
+    }
+    .dot{
+      width:8px; height:8px;
+      border-radius: 999px;
+      background: rgba(99,179,255,.95);
+      box-shadow: 0 0 14px rgba(99,179,255,.5);
+    }
+    .card h4{
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -.2px;
+    }
+
+    .cardBody{padding: 0 16px 16px}
+    .cardBody p{margin: 8px 0 0; color: var(--mut); font-size: 13px; line-height: 1.6}
+
+    .video{
+      width:100%;
+      aspect-ratio: 16 / 9;
+      border-top: 1px solid rgba(26,43,106,.65);
+      background: rgba(5,8,21,.55);
+      position:relative;
+      overflow:hidden;
+    }
+    .video iframe{
+      width:100%; height:100%;
+      border:0;
+      display:block;
+      transform: translateZ(0);
+    }
+
+    .shine{
+      position:absolute; inset:-2px;
+      background: radial-gradient(700px 220px at 20% 10%, rgba(99,179,255,.18), transparent 60%),
+                  radial-gradient(520px 220px at 85% 40%, rgba(138,123,255,.13), transparent 62%);
+      opacity:.9;
+      pointer-events:none;
+      transition: opacity .25s ease;
+    }
+    .card:hover .shine{opacity:1}
+
+    .skills{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 14px;
+    }
+
+    .pillBox{
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(10,16,48,.72), rgba(10,16,48,.40));
+      border: 1px solid rgba(26,43,106,.65);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .pillGrid{display:flex; flex-wrap:wrap; gap:10px}
+    .pill{
+      padding: 9px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(26,43,106,.7);
+      background: rgba(5,8,21,.45);
+      color: var(--mut);
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .15px;
+      position:relative;
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+    .pill::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: linear-gradient(90deg, rgba(99,179,255,0), rgba(99,179,255,.28), rgba(138,123,255,.18), rgba(99,179,255,0));
+      transform: translateX(-70%);
+      animation: sweep 4.6s ease-in-out infinite;
+      opacity:.6;
+      filter: blur(2px);
+    }
+    @keyframes sweep{
+      0%{transform: translateX(-70%)}
+      60%{transform: translateX(70%)}
+      100%{transform: translateX(70%)}
+    }
+
+    .about{
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(10,16,48,.72), rgba(10,16,48,.40));
+      border: 1px solid rgba(26,43,106,.65);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position:relative;
+      overflow:hidden;
+    }
+    .about p{margin: 0; color: var(--mut); font-size: 13.5px; line-height: 1.7}
+
+    .contact{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items:stretch;
+    }
+
+    .panel{
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(10,16,48,.72), rgba(10,16,48,.40));
+      border: 1px solid rgba(26,43,106,.65);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .line{
+      height:1px;
+      background: linear-gradient(90deg, transparent, rgba(99,179,255,.35), rgba(138,123,255,.22), transparent);
+      margin: 12px 0;
+      opacity:.85;
+    }
+
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .kbd{
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(26,43,106,.75);
+      background: rgba(5,8,21,.45);
+      color: var(--mut);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .footer{
+      margin-top: 44px;
+      padding: 18px 0 0;
+      color: rgba(169,182,230,.75);
+      font-size: 12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 12px;
+      border-top: 1px solid rgba(26,43,106,.55);
+    }
+
+    .reveal{opacity:0; transform: translate3d(0,14px,0) scale(.985); filter: blur(10px)}
+    .reveal.in{opacity:1; transform: translate3d(0,0,0) scale(1); filter: blur(0); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1), filter .8s ease}
+
+    .tilt{transform-style:preserve-3d}
+
+    @media (max-width: 980px){
+      .hero{grid-template-columns: 1fr; padding-top: 40px}
+      .grid{grid-template-columns: repeat(2, minmax(0,1fr))}
+      .skills{grid-template-columns: 1fr}
+      .contact{grid-template-columns: 1fr}
+    }
+    @media (max-width: 560px){
+      .grid{grid-template-columns: 1fr}
+      .links{gap:8px}
+      .chip{padding:9px 10px}
+    }
+
+    canvas#particles{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+      opacity:.75;
+    }
+    .stack{position:relative; z-index:1}
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="bgFX" aria-hidden="true">
+    <div class="orb o1" style="left:-160px; top:-180px"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+  </div>
+  <div class="gridFX" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="stack">
+    <div class="nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Mo</h1>
+          <span>Roblox Scripter · VFX Artist</span>
+        </div>
+      </div>
+      <nav class="links" aria-label="Primary">
+        <a class="chip" href="#work">Work</a>
+        <a class="chip" href="#skills">Skills</a>
+        <a class="chip" href="#about">About</a>
+        <a class="cta" href="#contact">Hire Mo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="stack">
+    <section class="hero" id="top">
+      <div class="headline reveal tilt" data-tilt>
+        <div class="kicker"><span class="pulse" aria-hidden="true"></span><span>Available for commissions · Systems + Effects</span></div>
+        <h2><span class="grad">Scripting that feels premium.</span><br/>VFX that sells the moment.</h2>
+        <p>
+          I Build Roblox systems that are clean, scalable, and polished—paired with stylish VFX and UI that make experiences feel high-end.
+          If you're hiring for a game that needs that “wow” factor, you’re in the right place!
+        </p>
+        <div class="actions">
+          <a class="btn" href="#work">View Work</a>
+          <a class="btn secondary" href="#contact">Contact</a>
+        </div>
+      </div>
+
+      <aside class="statCard reveal tilt" data-tilt>
+        <div class="scan" aria-hidden="true"></div>
+        <div class="stats">
+          <div class="mini">
+            <div class="n" data-count="3">0</div>
+            <div class="t">Featured Systems</div>
+          </div>
+          <div class="mini">
+            <div class="n" data-count="100">0</div>
+            <div class="t">Polish Mindset</div>
+          </div>
+          <div class="mini">
+            <div class="n" data-count="60">0</div>
+            <div class="t">FPS-Friendly</div>
+          </div>
+          <div class="mini">
+            <div class="n" data-count="24">0</div>
+            <div class="t">Hour Response Aim</div>
+          </div>
+        </div>
+        <div class="line"></div>
+        <div class="row">
+          <span class="kbd">LuaU</span>
+          <span class="kbd">UI/UX</span>
+          <span class="kbd">Particles</span>
+          <span class="kbd">Tweening</span>
+          <span class="kbd">Optimization</span>
+        </div>
+      </aside>
+    </section>
+
+    <section id="work">
+      <div class="sectionHeader reveal">
+        <div>
+          <h3>Featured Work</h3>
+          <p>These are portfolio-ready demos focused on gameplay feel, clarity, and hire-ready presentation.</p>
+        </div>
+      </div>
+
+      <div class="grid">
+        <article class="card reveal tilt" data-tilt>
+          <div class="shine" aria-hidden="true"></div>
+          <div class="cardTop">
+            <div>
+              <h4>Advanced Cosmetic System</h4>
+              <div class="tag"><span class="dot" aria-hidden="true"></span>Systems · UX · Data</div>
+            </div>
+          </div>
+          <div class="cardBody">
+            <p>Cosmetics that look and feel expensive: smooth previewing, clean organization, and player-friendly flow built for scale.</p>
+          </div>
+          <div class="video" aria-label="Advanced Cosmetic System video">
+            <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://streamable.com/e/ajv08o"></iframe>
+          </div>
+        </article>
+
+        <article class="card reveal tilt" data-tilt>
+          <div class="shine" aria-hidden="true"></div>
+          <div class="cardTop">
+            <div>
+              <h4>Waterbending Sword</h4>
+              <div class="tag"><span class="dot" aria-hidden="true"></span>VFX · Combat · Timing</div>
+            </div>
+          </div>
+          <div class="cardBody">
+            <p>Stylized waterbending with satisfying reads—impact, trails, and motion that sell the hit without visual noise.</p>
+          </div>
+          <div class="video" aria-label="Waterbending video">
+            <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://streamable.com/e/5h8d89"></iframe>
+          </div>
+        </article>
+
+        <article class="card reveal tilt" data-tilt>
+          <div class="shine" aria-hidden="true"></div>
+          <div class="cardTop">
+            <div>
+              <h4>Interactive UI System</h4>
+              <div class="tag"><span class="dot" aria-hidden="true"></span>UI · Motion · Feel</div>
+            </div>
+          </div>
+          <div class="cardBody">
+            <p>Responsive UI with buttery transitions and interactive feedback—built to feel modern, readable, and fast.</p>
+          </div>
+          <div class="video" aria-label="Interactive UI System video">
+            <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://streamable.com/e/vdli0e"></iframe>
+          </div>
+        </article>
+
+      <article class="card reveal tilt" data-tilt>
+          <div class="shine" aria-hidden="true"></div>
+          <div class="cardTop">
+            <div>
+              <h4>Simple Fire Burst VFX</h4>
+              <div class="tag"><span class="dot" aria-hidden="true"></span>VFX · Fire · Particles</div>
+            </div>
+          </div>
+          <div class="cardBody">
+            <p>A brief flash of fire designed for fast, responsive abilities.</p>
+          </div>
+          <div class="video" aria-label="Simple Fire Burst VFX">
+            <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://streamable.com/p7y05e"></iframe>
+          </div>
+        </article>
+
+      <article class="card reveal tilt" data-tilt>
+          <div class="shine" aria-hidden="true"></div>
+          <div class="cardTop">
+            <div>
+              <h4>Aura VFX</h4>
+              <div class="tag"><span class="dot" aria-hidden="true"></span>VFX · Particles · Flow · Energy</div>
+            </div>
+          </div>
+          <div class="cardBody">
+            <p>A steady aura of energy that surrounds the user, gently pulsing with power.</p>
+          </div>
+          <div class="video" aria-label="Aura VFX">
+            <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://streamable.com/fhpwjz"></iframe>
+          </div>
+        </article>
+
+  <article class="card reveal tilt" data-tilt>
+          <div class="shine" aria-hidden="true"></div>
+          <div class="cardTop">
+            <div>
+              <h4>Deku Black Whip VFX</h4>
+              <div class="tag"><span class="dot" aria-hidden="true"></span>VFX · Tendrils · Energy · Aura</div>
+            </div>
+          </div>
+          <div class="cardBody">
+            <p>A writhing aura of dark green energy that lashes outward like living tendrils, crackling with raw power.</p>
+          </div>
+          <div class="video" aria-label="Deku Black Whip VFX">
+            <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://streamable.com/hxgzlm"></iframe>
+          </div>
+        </article>
+
+ <article class="card reveal tilt" data-tilt>
+          <div class="shine" aria-hidden="true"></div>
+          <div class="cardTop">
+            <div>
+              <h4>Vanishing Smoke VFX</h4>
+              <div class="tag"><span class="dot" aria-hidden="true"></span>VFX · Smoke · Particles</div>
+            </div>
+          </div>
+          <div class="cardBody">
+            <p>A burst of heavy smoke that quickly spreads, then fades away without a trace.</p>
+          </div>
+          <div class="video" aria-label="Vanishing Smoke VFX">
+            <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://streamable.com/fns6it"></iframe>
+          </div>
+        </article>
+
+
+ <article class="card reveal tilt" data-tilt>
+          <div class="shine" aria-hidden="true"></div>
+          <div class="cardTop">
+            <div>
+              <h4>Shiny Hit VFX</h4>
+              <div class="tag"><span class="dot" aria-hidden="true"></span>VFX · Hit · Energy · Particles · Combat</div>
+            </div>
+          </div>
+          <div class="cardBody">
+            <p>A bright flash of light bursts on impact, emphasizing the hit with a sharp visual pop.</p>
+          </div>
+          <div class="video" aria-label="Shiny Hit VFX">
+            <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://streamable.com/kalt2w"></iframe>
+          </div>
+        </article>
+
+
+      </div>
+    </section>
+
+    <section id="skills">
+      <div class="sectionHeader reveal">
+        <div>
+          <h3>What I Bring</h3>
+          <p>Hire-ready strengths focused on player experience, stability, and clean delivery.</p>
+        </div>
+      </div>
+
+      <div class="skills">
+        <div class="pillBox reveal tilt" data-tilt>
+          <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px">
+            <div>
+              <div style="font-weight:900; letter-spacing:-.2px; font-size:15px">Core Capabilities</div>
+              <div style="color:var(--mut); font-size:13px; margin-top:4px; line-height:1.55">Systems-first engineering with a VFX finish.</div>
+            </div>
+            <div class="tag"><span class="dot" aria-hidden="true"></span>Roblox Ready</div>
+          </div>
+          <div class="line"></div>
+          <div class="pillGrid">
+            <span class="pill">LuaU Systems</span>
+            <span class="pill">Modular Architecture</span>
+            <span class="pill">UI Motion & Tweening</span>
+            <span class="pill">VFX / Particles</span>
+            <span class="pill">Combat + Ability FX</span>
+            <span class="pill">Client/Server Design</span>
+            <span class="pill">Data & Inventory</span>
+            <span class="pill">Performance Tuning</span>
+            <span class="pill">Tooling & Pipelines</span>
+            <span class="pill">Polish Passes</span>
+          </div>
+        </div>
+
+        <div class="about reveal tilt" data-tilt id="about">
+          <div style="font-weight:900; letter-spacing:-.2px; font-size:15px">About</div>
+          <div class="line"></div>
+          <p>
+            I focus on shipping features that feel finished: clear interaction, smooth animation, readable VFX, and code that’s easy to extend.
+            My goal is to make your game feel premium without sacrificing performance.
+          </p>
+          <div class="line"></div>
+          <div class="row">
+            <span class="kbd">Fast iteration</span>
+            <span class="kbd">Clean handoff</span>
+            <span class="kbd">Consistent style</span>
+            <span class="kbd">Scalable systems</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="sectionHeader reveal">
+        <div>
+          <h3>Hire Me!</h3>
+          <p>Send a short message with your scope, timeline, and references. I can reply with an estimate and next steps.</p>
+        </div>
+      </div>
+
+      <div class="contact">
+        <div class="panel reveal tilt" data-tilt>
+          <div style="font-weight:900; letter-spacing:-.2px; font-size:15px">Commission Checklist</div>
+          <div class="line"></div>
+          <div style="display:grid; gap:10px">
+            <div class="row"><span class="kbd">What you need built</span><span style="color:var(--mut); font-size:13px">Feature list + examples</span></div>
+            <div class="row"><span class="kbd">Style</span><span style="color:var(--mut); font-size:13px">Reference games / clips</span></div>
+            <div class="row"><span class="kbd">Deadline</span><span style="color:var(--mut); font-size:13px">Ideal delivery window</span></div>
+            <div class="row"><span class="kbd">Budget</span><span style="color:var(--mut); font-size:13px">Range is fine</span></div>
+          </div>
+          <div class="line"></div>
+          <a class="btn" href="#" id="copyMsg">Copy contact template</a>
+        </div>
+
+        <div class="panel reveal tilt" data-tilt>
+          <div style="font-weight:900; letter-spacing:-.2px; font-size:15px">Contact</div>
+          <div class="line"></div>
+          <p style="margin:0; color:var(--mut); font-size:13.5px; line-height:1.7">
+            Add your preferred contact handles below (Discord, X, email, Roblox profile). The buttons are ready to wire up.
+          </p>
+          <div class="line"></div>
+          <div class="row">
+            <a class="chip" href="#" role="button">Discord: @not_mo34506</a>
+            <a class="chip" href="#" role="button">Roblox: voetplayz</a>
+            <a class="chip" href="#" role="button">Email: mo.mohammad20100@gmail.com</a>
+          </div>
+          <div class="line"></div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap">
+            <a class="btn" href="#work">Rewatch Demos</a>
+            <a class="btn secondary" href="#top">Back to top</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div>© <span id="year"></span> Mo · Roblox Scripter / VFX Artist</div>
+        <div style="display:flex; gap:10px; align-items:center">
+          <span class="kbd">Blue Neon Theme</span>
+          <span class="kbd">Animated UI</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const io = new IntersectionObserver((entries)=>{
+      for (const e of entries){
+        if (e.isIntersecting) e.target.classList.add('in')
+      }
+    },{threshold:0.12})
+
+    document.querySelectorAll('.reveal').forEach(el=>io.observe(el))
+
+    const nums = [...document.querySelectorAll('[data-count]')]
+    const countIO = new IntersectionObserver((entries)=>{
+      for (const e of entries){
+        if (!e.isIntersecting) continue
+        const el = e.target
+        const to = Number(el.getAttribute('data-count'))
+        const start = 0
+        const dur = 900 + Math.random()*600
+        const t0 = performance.now()
+        const step = (t)=>{
+          const p = Math.min(1, (t - t0)/dur)
+          const eased = 1 - Math.pow(1-p, 3)
+          const v = Math.round(start + (to-start)*eased)
+          el.textContent = v
+          if (p < 1) requestAnimationFrame(step)
+        }
+        requestAnimationFrame(step)
+        countIO.unobserve(el)
+      }
+    },{threshold:0.35})
+    nums.forEach(n=>countIO.observe(n))
+
+    const tiltCards = [...document.querySelectorAll('[data-tilt]')]
+    const clamp = (n,min,max)=>Math.max(min,Math.min(max,n))
+
+    function enableTilt(el){
+      const onMove = (ev)=>{
+        const r = el.getBoundingClientRect()
+        const x = (ev.clientX - r.left)/r.width
+        const y = (ev.clientY - r.top)/r.height
+        const rx = clamp((.5 - y)*10, -10, 10)
+        const ry = clamp((x - .5)*14, -14, 14)
+        el.style.transform = `translateZ(0) rotateX(${rx}deg) rotateY(${ry}deg)`
+      }
+      const onLeave = ()=>{
+        el.style.transform = 'translateZ(0) rotateX(0deg) rotateY(0deg)'
+      }
+      el.addEventListener('mousemove', onMove)
+      el.addEventListener('mouseleave', onLeave)
+      el.style.transition = 'transform .18s ease'
+    }
+
+    if (!prefersReduced){
+      tiltCards.forEach(enableTilt)
+    }
+
+    const year = document.getElementById('year')
+    year.textContent = new Date().getFullYear()
+
+    const template = `Hi Mo,\n\nI'm interested in hiring you for: [feature/system/VFX].\nScope: [brief].\nReferences: [links].\nTimeline: [date].\nBudget: [range].\n\nBest,\n[name]`
+    const copyBtn = document.getElementById('copyMsg')
+    copyBtn.addEventListener('click', async (e)=>{
+      e.preventDefault()
+      try{
+        await navigator.clipboard.writeText(template)
+        copyBtn.textContent = 'Copied ✓'
+        setTimeout(()=>copyBtn.textContent = 'Copy contact template', 1400)
+      }catch{
+        const ta = document.createElement('textarea')
+        ta.value = template
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        ta.remove()
+        copyBtn.textContent = 'Copied ✓'
+        setTimeout(()=>copyBtn.textContent = 'Copy contact template', 1400)
+      }
+    })
+
+    const canvas = document.getElementById('particles')
+    const ctx = canvas.getContext('2d')
+    let w=0,h=0,dpr=1
+    const particles=[]
+
+    function resize(){
+      dpr = Math.min(2, window.devicePixelRatio || 1)
+      w = canvas.width = Math.floor(innerWidth*dpr)
+      h = canvas.height = Math.floor(innerHeight*dpr)
+      canvas.style.width = innerWidth+'px'
+      canvas.style.height = innerHeight+'px'
+    }
+
+    function rand(a,b){return a + Math.random()*(b-a)}
+
+    function seed(){
+      particles.length = 0
+      const count = Math.floor(Math.min(160, Math.max(80, innerWidth/10)))
+      for (let i=0;i<count;i++){
+        particles.push({
+          x: rand(0,w),
+          y: rand(0,h),
+          r: rand(0.8, 2.4)*dpr,
+          vx: rand(-0.12, 0.12)*dpr,
+          vy: rand(-0.10, 0.10)*dpr,
+          a: rand(0.06, 0.24),
+          tw: rand(0.6, 1.8),
+          ph: rand(0, Math.PI*2)
+        })
+      }
+    }
+
+    let mx = 0, my = 0
+    window.addEventListener('mousemove', (e)=>{
+      mx = e.clientX * dpr
+      my = e.clientY * dpr
+    }, {passive:true})
+
+    function draw(t){
+      if (prefersReduced){
+        ctx.clearRect(0,0,w,h)
+        return
+      }
+      ctx.clearRect(0,0,w,h)
+      ctx.globalCompositeOperation = 'lighter'
+
+      for (const p of particles){
+        p.ph += 0.01 * p.tw
+        const tw = (Math.sin(p.ph)+1)*0.5
+        const ax = (mx - p.x) * 0.000002
+        const ay = (my - p.y) * 0.000002
+        p.vx += ax
+        p.vy += ay
+        p.x += p.vx
+        p.y += p.vy
+
+        if (p.x < -40*dpr) p.x = w + 40*dpr
+        if (p.x > w + 40*dpr) p.x = -40*dpr
+        if (p.y < -40*dpr) p.y = h + 40*dpr
+        if (p.y > h + 40*dpr) p.y = -40*dpr
+
+        const r = p.r * (0.85 + tw*0.7)
+        const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*8)
+        g.addColorStop(0, `rgba(99,179,255,${0.22*p.a})`)
+        g.addColorStop(0.25, `rgba(42,123,255,${0.16*p.a})`)
+        g.addColorStop(1, 'rgba(0,0,0,0)')
+        ctx.fillStyle = g
+        ctx.beginPath()
+        ctx.arc(p.x,p.y,r*8,0,Math.PI*2)
+        ctx.fill()
+
+        ctx.fillStyle = `rgba(234,240,255,${(0.18+tw*0.28)*p.a})`
+        ctx.beginPath()
+        ctx.arc(p.x,p.y,r,0,Math.PI*2)
+        ctx.fill()
+      }
+
+      for (let i=0;i<particles.length;i++){
+        const a = particles[i]
+        for (let j=i+1;j<i+8 && j<particles.length;j++){
+          const b = particles[j]
+          const dx = a.x-b.x
+          const dy = a.y-b.y
+          const d = Math.hypot(dx,dy)
+          if (d < 140*dpr){
+            const alpha = (1 - d/(140*dpr))*0.06
+            ctx.strokeStyle = `rgba(99,179,255,${alpha})`
+            ctx.lineWidth = 1*dpr
+            ctx.beginPath()
+            ctx.moveTo(a.x,a.y)
+            ctx.lineTo(b.x,b.y)
+            ctx.stroke()
+          }
+        }
+      }
+
+      ctx.globalCompositeOperation = 'source-over'
+      requestAnimationFrame(draw)
+    }
+
+    resize(); seed(); requestAnimationFrame(draw)
+    window.addEventListener('resize', ()=>{resize(); seed()}, {passive:true})
+
+    const bg = document.querySelector('.bgFX')
+    window.addEventListener('scroll', ()=>{
+      const y = Math.min(140, window.scrollY * 0.18)
+      bg.style.transform = `translate3d(0, ${-y}px, 0)`
+    }, {passive:true})
+
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        const id = a.getAttribute('href')
+        if (!id || id === '#') return
+        const el = document.querySelector(id)
+        if (!el) return
+        e.preventDefault()
+        el.scrollIntoView({behavior: prefersReduced ? 'auto' : 'smooth', block:'start'})
+      })
+    })
+  </script>
+</body>
+</html>
